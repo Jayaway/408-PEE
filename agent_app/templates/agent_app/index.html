@@ -1,0 +1,2316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>408智能刷题助手</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DESIGN SYSTEM — Apple AirPods Style
+   ============================================================ */
+:root {
+  --bg: #000000;
+  --bg-alt: #0a0a0a;
+  --bg-card: #111111;
+  --bg-card-hover: #1a1a1a;
+  --text: #f5f5f7;
+  --text2: #a1a1a6;
+  --text3: #6e6e73;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.14);
+  --shadow: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.5);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.6);
+  --shadow-xl: 0 24px 64px rgba(0,0,0,0.7);
+
+  --primary: #6366f1;
+  --primary-light: #818cf8;
+  --primary-dark: #4f46e5;
+  --primary-glow: rgba(99,102,241,0.15);
+  --accent-1: #0d9488;
+  --accent-2: #d97757;
+  --accent-3: #eab308;
+  --success: #30d158;
+  --success-light: rgba(48,209,88,0.12);
+  --danger: #ff453a;
+  --danger-light: rgba(255,69,58,0.12);
+  --warning: #ff9f0a;
+  --warning-light: rgba(255,159,10,0.12);
+
+  --radius-sm: 12px;
+  --radius: 18px;
+  --radius-lg: 24px;
+  --radius-pill: 980px;
+
+  --transition: .35s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-fast: .2s cubic-bezier(0.25, 0.1, 0.25, 1);
+  --transition-spring: .5s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --font: 'Geist', -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --font-mono: 'Geist Mono', 'SF Mono', 'JetBrains Mono', monospace;
+  --section-padding: 100px 0;
+}
+
+/* Light Mode — kept for toggle but not default */
+[data-theme="light"] {
+  --bg: #f5f5f7;
+  --bg-alt: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fafafa;
+  --text: #1d1d1f;
+  --text2: #86868b;
+  --text3: #aeaeb2;
+  --border: rgba(0,0,0,0.08);
+  --border-strong: rgba(0,0,0,0.14);
+  --shadow: 0 2px 8px rgba(0,0,0,0.04);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.06);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.08);
+  --shadow-xl: 0 24px 64px rgba(0,0,0,0.1);
+  --primary-glow: rgba(99,102,241,0.08);
+  --success-light: rgba(48,209,88,0.08);
+  --danger-light: rgba(255,69,58,0.08);
+  --warning-light: rgba(255,159,10,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  transition: background .6s ease, color .6s ease;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   BACKGROUND — Dot grid + animated blobs
+   ============================================================ */
+.bg-layer {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden;
+}
+.bg-grid {
+  position: absolute; inset: 0;
+  /* Subtle dot pattern */
+  background-image: radial-gradient(rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+[data-theme="light"] .bg-grid {
+  background-image: radial-gradient(rgba(0,0,0,0.04) 1px, transparent 1px);
+}
+.bg-blobs {
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 600px 400px at 20% 10%, rgba(99,102,241,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 350px at 80% 30%, rgba(13,148,136,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 500px at 50% 70%, rgba(217,119,87,0.03) 0%, transparent 70%);
+  animation: bgBlobs 20s ease-in-out infinite alternate;
+}
+@keyframes bgBlobs {
+  0% { opacity: 0.6; transform: scale(1); }
+  100% { opacity: 1; transform: scale(1.08); }
+}
+[data-theme="light"] .bg-blobs {
+  background:
+    radial-gradient(ellipse 600px 400px at 20% 10%, rgba(99,102,241,0.04) 0%, transparent 70%),
+    radial-gradient(ellipse 500px 350px at 80% 30%, rgba(13,148,136,0.03) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 500px at 50% 70%, rgba(217,119,87,0.02) 0%, transparent 70%);
+}
+
+/* ============================================================
+   NAVIGATION — Apple-style glass bar
+   ============================================================ */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(0,0,0,0.82);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  transition: background .6s, border .6s;
+}
+[data-theme="light"] .nav {
+  background: rgba(255,255,255,0.82);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+.nav-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 48px; padding: 0 22px;
+}
+.nav-brand {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 16px; font-weight: 700;
+  color: var(--text); text-decoration: none;
+  letter-spacing: -.01em;
+}
+.nav-brand-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.nav-links {
+  display: flex; gap: 4px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 10px; padding: 3px;
+}
+[data-theme="light"] .nav-links { background: rgba(0,0,0,0.04); }
+.nav-link {
+  padding: 6px 16px; border-radius: 8px;
+  border: none; cursor: pointer;
+  font-size: 13px; font-weight: 500;
+  color: var(--text2);
+  background: none;
+  transition: var(--transition-fast);
+  white-space: nowrap;
+  font-family: var(--font);
+}
+.nav-link:hover { color: var(--text); }
+.nav-link.active {
+  background: rgba(255,255,255,0.1);
+  color: var(--text);
+  font-weight: 600;
+}
+[data-theme="light"] .nav-link.active { background: rgba(0,0,0,0.06); }
+.nav-actions { display: flex; align-items: center; gap: 8px; }
+.theme-toggle {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: none; background: rgba(255,255,255,0.06);
+  cursor: pointer; font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition-fast); color: var(--text2);
+}
+.theme-toggle:hover { background: rgba(255,255,255,0.12); color: var(--text); }
+[data-theme="light"] .theme-toggle { background: rgba(0,0,0,0.04); }
+[data-theme="light"] .theme-toggle:hover { background: rgba(0,0,0,0.08); }
+
+/* ============================================================
+   SECTIONS — Full-width
+   ============================================================ */
+.section {
+  position: relative; z-index: 1;
+  padding: 100px 0;
+}
+.section-inner {
+  max-width: 980px; margin: 0 auto;
+  padding: 0 24px;
+}
+.section-header {
+  text-align: center; margin-bottom: 56px;
+}
+.section-title {
+  font-size: 44px; font-weight: 800;
+  letter-spacing: -.035em;
+  line-height: 1.12;
+  margin-bottom: 12px;
+  background: linear-gradient(180deg, #ffffff 0%, #a1a1a6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 20px rgba(99,102,241,0.15));
+}
+[data-theme="light"] .section-title {
+  background: linear-gradient(180deg, #1d1d1f 0%, #86868b 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.section-subtitle {
+  font-size: 17px; color: var(--text2); font-weight: 400;
+  max-width: 560px; margin: 0 auto;
+}
+
+/* ============================================================
+   HERO SECTION
+   ============================================================ */
+.hero {
+  position: relative; z-index: 1;
+  text-align: center;
+  padding: 140px 24px 100px;
+}
+.hero-eyebrow {
+  font-size: 14px; font-weight: 600;
+  color: var(--primary-light);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.hero-title {
+  font-size: clamp(44px, 8vw, 72px);
+  font-weight: 900;
+  letter-spacing: -.04em;
+  line-height: 1.05;
+  margin-bottom: 16px;
+  background: linear-gradient(180deg, #ffffff 20%, #a1a1a6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+[data-theme="light"] .hero-title {
+  background: linear-gradient(180deg, #1d1d1f 20%, #6e6e73 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-desc {
+  font-size: 19px; color: var(--text2);
+  max-width: 520px; margin: 0 auto 32px;
+  line-height: 1.6;
+}
+.hero-actions {
+  display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+}
+.hero-visual {
+  margin-top: 60px;
+  display: flex; justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.hero-stat {
+  text-align: center;
+  padding: 36px 44px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  min-width: 150px;
+  transition: all .4s ease;
+}
+.hero-stat:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(255,255,255,0.12);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 40px rgba(99,102,241,0.08);
+}
+[data-theme="light"] .hero-stat {
+  background: rgba(0,0,0,0.02);
+  border-color: rgba(0,0,0,0.05);
+}
+[data-theme="light"] .hero-stat:hover {
+  background: rgba(0,0,0,0.04);
+}
+.hero-stat-value {
+  font-size: 36px; font-weight: 800;
+  letter-spacing: -.03em;
+  background: linear-gradient(135deg, var(--primary-light), var(--accent-1));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero-stat-label {
+  font-size: 13px; color: var(--text3); margin-top: 6px; font-weight: 500;
+}
+
+/* ============================================================
+   BUTTONS — Apple pill style
+   ============================================================ */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 11px 24px;
+  border-radius: var(--radius-pill);
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition);
+  border: none;
+  font-family: var(--font);
+  letter-spacing: .01em;
+  white-space: nowrap;
+  outline-offset: 2px;
+}
+.btn:active { transform: scale(0.96); }
+.btn-primary {
+  background: #fff; color: #000;
+  box-shadow: 0 2px 12px rgba(255,255,255,0.08);
+}
+.btn-primary:hover { background: #e5e5e5; box-shadow: 0 4px 20px rgba(255,255,255,0.15); transform: translateY(-1px); }
+[data-theme="light"] .btn-primary {
+  background: #1d1d1f; color: #fff;
+}
+[data-theme="light"] .btn-primary:hover { background: #3a3a3c; }
+.btn-primary:disabled {
+  opacity: .35; cursor: not-allowed; transform: none;
+}
+.btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--border-strong);
+  color: var(--text);
+}
+.btn-outline:hover { border-color: #fff; color: #fff; }
+[data-theme="light"] .btn-outline:hover { border-color: #1d1d1f; color: #1d1d1f; }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.btn-icon {
+  width: 36px; height: 36px; padding: 0;
+  border-radius: 50%;
+}
+.btn-accent {
+  background: var(--primary);
+  color: #fff;
+  border: none;
+}
+.btn-accent:hover { background: var(--primary-dark); }
+.btn-success { background: var(--success); color: #000; }
+.btn-success:hover { filter: brightness(1.1); }
+.btn-ghost {
+  background: transparent; color: var(--text2);
+}
+.btn-ghost:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+
+/* ============================================================
+   CARDS — Glass morphism premium
+   ============================================================ */
+.card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius-lg);
+  padding: 36px;
+  margin-bottom: 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  transition: all .4s cubic-bezier(0.25,0.1,0.25,1);
+  position: relative;
+  overflow: hidden;
+  animation: fadeInUp .6s cubic-bezier(0.25,0.1,0.25,1);
+}
+.card::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%, rgba(255,255,255,0.04) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+.card:hover {
+  border-color: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px rgba(99,102,241,0.08);
+}
+[data-theme="light"] .card {
+  background: rgba(0,0,0,0.02);
+  border-color: rgba(0,0,0,0.05);
+}
+[data-theme="light"] .card::before {
+  background: linear-gradient(135deg, rgba(0,0,0,0.06) 0%, transparent 50%, rgba(0,0,0,0.03) 100%);
+}
+[data-theme="light"] .card:hover {
+  border-color: rgba(0,0,0,0.1);
+  background: rgba(0,0,0,0.03);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.06), 0 0 0 1px rgba(99,102,241,0.06);
+}
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================================
+   SETUP PANEL — Compact and clean
+   ============================================================ */
+.section-setup {
+  background: var(--bg-alt);
+  border-top: 1px solid rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  position: relative;
+}
+.section-setup::before {
+  content: '';
+  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+  width: 80%; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99,102,241,0.15), transparent);
+}
+[data-theme="light"] .section-setup {
+  border-color: rgba(0,0,0,0.04);
+}
+[data-theme="light"] .section-setup::before {
+  background: linear-gradient(90deg, transparent, rgba(99,102,241,0.08), transparent);
+}
+.setup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  align-items: end;
+}
+.setup-group label {
+  display: block;
+  font-size: 11px;
+  color: var(--text3);
+  margin-bottom: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+.setup-group select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  background: rgba(255,255,255,0.03);
+  color: var(--text);
+  transition: all .25s ease;
+  outline: none;
+  cursor: pointer;
+  font-family: var(--font);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236e6e73' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+.setup-group select:hover { border-color: rgba(255,255,255,0.14); background: rgba(255,255,255,0.05); }
+.setup-group select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-glow);
+}
+.mode-select {
+  display: flex; gap: 8px;
+}
+.mode-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  cursor: pointer;
+  text-align: center;
+  font-size: 12.5px;
+  font-weight: 500;
+  transition: var(--transition-fast);
+  color: var(--text2);
+  font-family: var(--font);
+}
+.mode-btn:hover { border-color: var(--text3); color: var(--text); }
+.mode-btn.active {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-glow);
+}
+input[type=range] {
+  -webkit-appearance: none; width: 100%;
+  height: 6px;
+  background: var(--border-strong);
+  border-radius: 3px;
+  outline: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 22px; height: 22px;
+  background: #fff;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  transition: transform var(--transition-fast);
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.count-display {
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  min-width: 48px; padding: 4px 14px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--radius-pill);
+  font-size: 13px; font-weight: 600;
+  margin-left: 12px;
+}
+.setup-actions {
+  display: flex; justify-content: center; margin-top: 28px;
+}
+
+/* ============================================================
+   QUESTION AREA
+   ============================================================ */
+.question-top-bar {
+  display: flex; align-items: center; gap: 20px;
+  margin-bottom: 24px; flex-wrap: wrap;
+}
+.progress-ring-wrap {
+  position: relative;
+  width: 52px; height: 52px; flex-shrink: 0;
+}
+.progress-ring {
+  transform: rotate(-90deg);
+  width: 52px; height: 52px;
+}
+.progress-ring .bg-circle {
+  fill: none; stroke: var(--border-strong); stroke-width: 4;
+}
+.progress-ring .fg-circle {
+  fill: none; stroke: url(#progressGradient);
+  stroke-width: 4; stroke-linecap: round;
+  transition: stroke-dashoffset .6s cubic-bezier(.4,0,.2,1);
+}
+.progress-ring-text {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700;
+  color: var(--primary-light);
+}
+.streak-badge, .timer-badge {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 14px; border-radius: var(--radius-pill);
+  font-size: 13px; font-weight: 600;
+  border: 1.5px solid var(--border-strong);
+  background: transparent;
+  transition: var(--transition-fast);
+}
+.streak-badge.fire {
+  border-color: var(--warning); color: var(--warning);
+  background: var(--warning-light);
+  animation: streakPulse .5s ease;
+}
+@keyframes streakPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+}
+.timer-badge { font-family: var(--font-mono); }
+.timer-badge.warning { border-color: var(--warning); color: var(--warning); }
+.timer-badge.danger { border-color: var(--danger); color: var(--danger); animation: timerPulse .5s ease infinite; }
+@keyframes timerPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .4; }
+}
+.progress-text-inline {
+  font-size: 13px; color: var(--text2); font-weight: 500;
+}
+
+/* Question content */
+.question-header {
+  display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 20px;
+  flex-wrap: wrap; gap: 10px;
+}
+.question-num {
+  font-size: 13px; font-weight: 600;
+  color: var(--primary-light);
+  background: var(--primary-glow);
+  padding: 5px 16px; border-radius: var(--radius-pill);
+}
+.badge {
+  display: inline-block;
+  padding: 4px 12px; border-radius: 6px;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: .02em;
+}
+.badge-easy { background: var(--success-light); color: var(--success); }
+.badge-mid { background: var(--warning-light); color: var(--warning); }
+.badge-hard { background: var(--danger-light); color: var(--danger); }
+.badge-tag { background: var(--primary-glow); color: var(--primary-light); }
+.question-content {
+  font-size: 15px; line-height: 1.8;
+  margin-bottom: 24px; font-weight: 400;
+  color: var(--text);
+}
+.option {
+  display: flex; align-items: flex-start; gap: 14px;
+  padding: 16px 20px;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all .25s cubic-bezier(0.25,0.1,0.25,1);
+  font-size: 14px; line-height: 1.7;
+  background: rgba(255,255,255,0.02);
+}
+.option:hover {
+  border-color: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.04);
+  transform: translateX(2px);
+}
+.option.selected {
+  border-color: var(--primary);
+  background: rgba(99,102,241,0.08);
+  box-shadow: 0 0 20px rgba(99,102,241,0.06);
+}
+.option.correct {
+  border-color: var(--success);
+  background: rgba(48,209,88,0.06);
+  box-shadow: 0 0 20px rgba(48,209,88,0.06);
+}
+.option.wrong {
+  border-color: var(--danger);
+  background: rgba(255,69,58,0.06);
+  box-shadow: 0 0 20px rgba(255,69,58,0.06);
+}
+.option.disabled { pointer-events: none; }
+.option .opt-letter {
+  font-weight: 700; font-size: 16px;
+  min-width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text2);
+  transition: var(--transition-fast);
+  flex-shrink: 0;
+}
+.option.selected .opt-letter { background: var(--primary); color: #fff; }
+.option.correct .opt-letter { background: var(--success); color: #000; }
+.option.wrong .opt-letter { background: var(--danger); color: #fff; }
+.submit-row { display: flex; gap: 12px; margin-top: 20px; }
+
+/* Result */
+.result-box {
+  padding: 18px 22px; border-radius: var(--radius);
+  margin-top: 16px; font-weight: 600; font-size: 14px;
+  animation: fadeInUp .3s ease;
+}
+.result-box.correct {
+  background: var(--success-light);
+  border: 1px solid rgba(48,209,88,0.2);
+}
+.result-box.wrong {
+  background: var(--danger-light);
+  border: 1px solid rgba(255,69,58,0.2);
+}
+.explanation {
+  margin-top: 14px; padding: 18px 20px;
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius);
+  font-size: 13.5px; line-height: 1.8;
+  white-space: pre-wrap;
+  border: 1px solid var(--border);
+  color: var(--text2);
+}
+[data-theme="light"] .explanation { background: rgba(0,0,0,0.02); }
+
+/* Summary */
+.summary-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px;
+  margin-bottom: 28px;
+}
+.summary-item {
+  text-align: center; padding: 32px 24px;
+  background: rgba(255,255,255,0.03);
+  border-radius: var(--radius);
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: all .35s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.summary-item:hover {
+  border-color: rgba(255,255,255,0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+}
+.summary-item:hover { border-color: var(--border-strong); }
+.summary-value {
+  font-size: 36px; font-weight: 800;
+  letter-spacing: -.03em; line-height: 1;
+}
+.summary-label {
+  font-size: 12px; color: var(--text3); margin-top: 8px;
+  font-weight: 500; text-transform: uppercase; letter-spacing: .04em;
+}
+.summary-value.green { color: var(--success); }
+.summary-value.red { color: var(--danger); }
+.summary-value.primary { color: var(--primary-light); }
+
+/* Stats table */
+.stats-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.stats-table th {
+  color: var(--text3); font-weight: 600; font-size: 11px;
+  text-transform: uppercase; letter-spacing: .04em;
+  text-align: left; padding: 14px 16px;
+  border-bottom: 1px solid var(--border-strong);
+}
+.stats-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.stats-table tbody tr { transition: background var(--transition-fast); }
+.stats-table tbody tr:hover { background: rgba(255,255,255,0.03); }
+.accuracy-cell { font-weight: 600; }
+.accuracy-cell.high { color: var(--success); }
+.accuracy-cell.mid { color: var(--warning); }
+.accuracy-cell.low { color: var(--danger); }
+
+/* Wrong book */
+.wrong-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px; margin-bottom: 14px;
+  background: var(--bg-card);
+  transition: var(--transition-fast);
+}
+.wrong-item:hover { border-color: var(--border-strong); }
+.wrong-item .question-content { font-size: 14px; margin-bottom: 12px; }
+.wrong-answer { color: var(--danger); font-weight: 600; font-size: 13px; margin-bottom: 8px; }
+
+/* Empty state */
+.empty { text-align: center; padding: 80px 20px; color: var(--text3); }
+.empty-icon { font-size: 56px; margin-bottom: 16px; opacity: .4; }
+.empty p { font-size: 15px; }
+
+/* ============================================================
+   SUBJECT CARDS — Hero area
+   ============================================================ */
+.subjects-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+}
+.subject-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.subject-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+.subject-card-icon {
+  width: 48px; height: 48px; border-radius: 14px;
+  margin: 0 auto 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+}
+.subject-card-icon.ds { background: rgba(99,102,241,0.15); }
+.subject-card-icon.co { background: rgba(217,119,87,0.15); }
+.subject-card-icon.os { background: rgba(13,148,136,0.15); }
+.subject-card-icon.cn { background: rgba(234,179,8,0.15); }
+.subject-card-name {
+  font-size: 15px; font-weight: 700;
+  margin-bottom: 6px;
+}
+.subject-card-count {
+  font-size: 12px; color: var(--text3);
+}
+
+/* ============================================================
+   2D MIND MAP
+   ============================================================ */
+.tree-subj-btn {
+  padding: 6px 16px;
+  border-radius: var(--radius-pill);
+  border: 1.5px solid var(--border-strong);
+  background: transparent;
+  color: var(--text2);
+  font-size: 12px; font-weight: 500; cursor: pointer;
+  transition: var(--transition-fast);
+  font-family: var(--font);
+}
+.tree-subj-btn:hover { border-color: var(--text3); color: var(--text); }
+.tree-subj-btn.active {
+  border-color: var(--primary);
+  color: var(--primary-light);
+  background: var(--primary-glow);
+}
+
+/* ============================================================
+   CHAT PANEL — Floating minimal
+   ============================================================ */
+.chat-panel {
+  position: fixed; bottom: 24px; right: 24px;
+  width: 420px; max-height: 580px;
+  background: rgba(28,28,30,0.96);
+  backdrop-filter: saturate(180%) blur(30px);
+  -webkit-backdrop-filter: saturate(180%) blur(30px);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  display: flex; flex-direction: column;
+  z-index: 200;
+  border: 1px solid rgba(255,255,255,0.08);
+  animation: popIn .4s cubic-bezier(.34,1.56,.64,1);
+  overflow: hidden;
+}
+[data-theme="light"] .chat-panel {
+  background: rgba(255,255,255,0.96);
+  border: 1px solid rgba(0,0,0,0.08);
+}
+@keyframes popIn {
+  from { opacity: 0; transform: scale(.9) translateY(16px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.chat-header {
+  padding: 14px 20px;
+  display: flex; justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
+  color: #fff; font-weight: 600; font-size: 14px;
+}
+.chat-close {
+  background: rgba(255,255,255,0.18);
+  border: none; width: 28px; height: 28px;
+  border-radius: 50%; font-size: 14px;
+  cursor: pointer; color: #fff;
+  transition: var(--transition-fast);
+  display: flex; align-items: center; justify-content: center;
+}
+.chat-close:hover { background: rgba(255,255,255,0.3); transform: rotate(90deg); }
+.chat-messages {
+  flex: 1; overflow-y: auto; padding: 16px;
+  max-height: 400px; font-size: 13px; line-height: 1.7;
+}
+.chat-msg {
+  margin-bottom: 10px; padding: 10px 16px;
+  border-radius: 14px; max-width: 88%;
+  white-space: pre-wrap; word-break: break-word;
+  animation: msgIn .25s ease;
+}
+@keyframes msgIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.chat-msg.user {
+  background: var(--primary); color: #fff;
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+.chat-msg.bot {
+  background: rgba(255,255,255,0.06);
+  color: var(--text);
+  border-bottom-left-radius: 4px;
+}
+.chat-msg.typing { background: rgba(255,255,255,0.04); color: var(--text3); font-style: italic; }
+.chat-quick-actions {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+}
+.chat-quick-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  font-size: 11px; font-weight: 500;
+  cursor: pointer; transition: var(--transition-fast);
+  color: var(--text2); font-family: var(--font);
+}
+.chat-quick-btn:hover { border-color: var(--primary); color: var(--primary-light); background: var(--primary-glow); }
+.chat-input-row {
+  display: flex; padding: 12px 16px;
+  border-top: 1px solid var(--border); gap: 8px;
+}
+.chat-input-row input {
+  flex: 1; padding: 10px 16px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  font-size: 13px; outline: none;
+  transition: var(--transition-fast);
+  background: rgba(255,255,255,0.04);
+  color: var(--text);
+  font-family: var(--font);
+}
+.chat-input-row input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow);
+}
+.chat-toggle {
+  position: fixed; bottom: 24px; right: 24px;
+  width: 52px; height: 52px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff; border: none;
+  cursor: pointer; font-size: 22px;
+  box-shadow: 0 8px 32px rgba(99,102,241,0.35);
+  z-index: 199;
+  display: flex; align-items: center; justify-content: center;
+  transition: var(--transition);
+}
+.chat-toggle:hover { transform: scale(1.1); box-shadow: 0 12px 36px rgba(99,102,241,0.45); }
+
+/* ============================================================
+   CONFETTI CANVAS
+   ============================================================ */
+#confetti-canvas {
+  position: fixed; inset: 0; z-index: 300;
+  pointer-events: none;
+}
+
+/* ============================================================
+   SCROLL ANIMATIONS
+   ============================================================ */
+.scroll-reveal {
+  opacity: 0; transform: translateY(30px);
+  transition: opacity .8s cubic-bezier(0.25,0.1,0.25,1), transform .8s cubic-bezier(0.25,0.1,0.25,1);
+}
+.scroll-reveal.visible {
+  opacity: 1; transform: translateY(0);
+}
+
+/* ============================================================
+   SKELETON LOADING
+   ============================================================ */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.04) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+
+/* ============================================================
+   RIPPLE
+   ============================================================ */
+.ripple {
+  position: absolute; border-radius: 50%;
+  background: rgba(255,255,255,0.25);
+  transform: scale(0);
+  animation: rippleEffect .6s ease-out;
+  pointer-events: none;
+}
+@keyframes rippleEffect {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ============================================================
+   FOOTER
+   ============================================================ */
+.footer {
+  position: relative; z-index: 1;
+  border-top: 1px solid var(--border);
+  padding: 32px 24px;
+  text-align: center;
+  font-size: 12px; color: var(--text3);
+}
+.footer a { color: var(--text2); text-decoration: none; transition: var(--transition-fast); }
+.footer a:hover { color: var(--text); }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 768px) {
+  .section { padding: 80px 0; }
+  .section-title { font-size: 36px; }
+  .hero { padding: 100px 20px 80px; }
+  .hero-title { font-size: 40px; }
+  .hero-desc { font-size: 16px; }
+  .hero-stat { min-width: 100px; padding: 24px 20px; }
+  .hero-stat-value { font-size: 28px; }
+  .subjects-grid { grid-template-columns: repeat(2, 1fr); }
+  .setup-grid { grid-template-columns: 1fr; }
+  .summary-grid { grid-template-columns: 1fr; }
+  .question-top-bar { gap: 12px; }
+  .chat-panel {
+    width: calc(100vw - 16px); right: 8px;
+    bottom: 12px; max-height: 480px;
+  }
+  .nav-link { padding: 5px 10px; font-size: 11px; }
+}
+
+/* ============================================================
+   ACCESSIBILITY
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .scroll-reveal { opacity: 1; transform: none; }
+  #confetti-canvas { display: none; }
+}
+button:focus-visible, select:focus-visible, input:focus-visible, .option:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+</style>
+</head>
+<body>
+
+<!-- Background -->
+<div class="bg-layer"><div class="bg-grid"></div><div class="bg-blobs"></div></div>
+
+<!-- Confetti -->
+<canvas id="confetti-canvas"></canvas>
+
+<!-- Navigation -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="#">
+      <span class="nav-brand-icon">🧠</span>
+      <span>408 刷题</span>
+    </a>
+    <div class="nav-links">
+      <button class="nav-link active" data-tab="practice">刷题</button>
+      <button class="nav-link" data-tab="mindmap">知识导图</button>
+      <button class="nav-link" data-tab="stats">统计</button>
+      <button class="nav-link" data-tab="wrongbook">错题本</button>
+    </div>
+    <div class="nav-actions">
+      <button class="theme-toggle" id="theme-toggle" title="切换外观">☀️</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Hero -->
+<header class="hero">
+  <p class="hero-eyebrow">Computer Science · Postgraduate Exam</p>
+  <h1 class="hero-title">408 计算机考研<br>智能刷题系统</h1>
+  <p class="hero-desc">覆盖数据结构、计算机组成原理、操作系统、计算机网络四大科目，智能组卷、自适应难度、AI即时答疑</p>
+  <div class="hero-actions">
+    <button class="btn btn-primary" onclick="document.querySelector('[data-tab=practice]').click(); scrollToSection('section-practice')">开始刷题 →</button>
+    <button class="btn btn-outline" onclick="document.querySelector('[data-tab=mindmap]').click(); scrollToSection('section-mindmap')">探索知识导图</button>
+  </div>
+  <div class="hero-visual">
+    <div class="hero-stat">
+      <div class="hero-stat-value">4</div>
+      <div class="hero-stat-label">核心科目</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-value">500+</div>
+      <div class="hero-stat-label">精选题目</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-value">导图</div>
+      <div class="hero-stat-label">知识导图</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hero-stat-value">AI</div>
+      <div class="hero-stat-label">智能答疑</div>
+    </div>
+  </div>
+</header>
+
+<!-- Subject Cards -->
+<section class="section" style="padding-top:0;">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2 class="section-title">四大核心科目</h2>
+      <p class="section-subtitle">点击科目快速开始针对性练习</p>
+    </div>
+    <div class="subjects-grid">
+      <div class="subject-card" onclick="quickStart('ds')">
+        <div class="subject-card-icon ds">📊</div>
+        <div class="subject-card-name">数据结构</div>
+        <div class="subject-card-count">线性表 · 树 · 图 · 排序 · 查找</div>
+      </div>
+      <div class="subject-card" onclick="quickStart('co')">
+        <div class="subject-card-icon co">💻</div>
+        <div class="subject-card-name">计算机组成原理</div>
+        <div class="subject-card-count">数据表示 · 存储 · CPU · 总线</div>
+      </div>
+      <div class="subject-card" onclick="quickStart('os')">
+        <div class="subject-card-icon os">⚙️</div>
+        <div class="subject-card-name">操作系统</div>
+        <div class="subject-card-count">进程 · 内存 · 文件 · I/O</div>
+      </div>
+      <div class="subject-card" onclick="quickStart('cn')">
+        <div class="subject-card-icon cn">🌐</div>
+        <div class="subject-card-name">计算机网络</div>
+        <div class="subject-card-count">体系结构 · 协议 · 传输 · 应用</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Practice Section -->
+<section class="section section-setup" id="section-practice">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2 class="section-title">开始练习</h2>
+      <p class="section-subtitle">选择科目、难度和模式，开启智能刷题</p>
+    </div>
+
+    <!-- Setup Card -->
+    <div class="card" id="setup-card">
+      <div class="setup-grid">
+        <div class="setup-group">
+          <label>科目</label>
+          <select id="sel-category">
+            <option value="">全部科目（综合）</option>
+            {% for cat in categories %}
+            <option value="{{ cat.slug }}">{{ cat.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="setup-group">
+          <label>难度</label>
+          <select id="sel-difficulty">
+            <option value="">自适应（推荐）</option>
+            <option value="1">基础</option>
+            <option value="2">中等</option>
+            <option value="3">较难</option>
+          </select>
+        </div>
+        <div class="setup-group">
+          <label>题目数量 <span class="count-display" id="count-label">10 题</span></label>
+          <input type="range" id="sel-count" min="5" max="30" value="10" step="5">
+        </div>
+      </div>
+      <div class="setup-group" style="margin-bottom:16px;">
+        <label>练习模式</label>
+        <div class="mode-select">
+          <div class="mode-btn active" data-mode="new">新题练习</div>
+          <div class="mode-btn" data-mode="adaptive">智能组卷</div>
+          <div class="mode-btn" data-mode="wrong">错题重练</div>
+        </div>
+      </div>
+      <div class="setup-actions">
+        <button class="btn btn-primary" id="btn-start">开始练习</button>
+      </div>
+    </div>
+
+    <!-- Question Area -->
+    <div id="question-area" style="display:none;">
+      <div class="question-top-bar">
+        <div class="progress-ring-wrap">
+          <svg class="progress-ring" viewBox="0 0 52 52">
+            <defs>
+              <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#6366f1"/>
+                <stop offset="100%" stop-color="#818cf8"/>
+              </linearGradient>
+            </defs>
+            <circle class="bg-circle" cx="26" cy="26" r="22"/>
+            <circle class="fg-circle" id="progress-circle" cx="26" cy="26" r="22"
+                    stroke-dasharray="138.2" stroke-dashoffset="138.2"/>
+          </svg>
+          <div class="progress-ring-text" id="progress-ring-text">0%</div>
+        </div>
+        <div class="progress-text-inline" id="progress-text">0 / 0</div>
+        <div class="streak-badge" id="streak-badge" style="display:none;">
+          🔥 <span id="streak-count">0</span> 连对
+        </div>
+        <div class="timer-badge" id="timer-badge">
+          ⏱ <span id="timer-display">00:00</span>
+        </div>
+      </div>
+
+      <div class="card question-card" id="question-card" aria-live="polite"></div>
+      <div class="card" id="result-card" style="display:none;" aria-live="assertive"></div>
+      <div id="nav-buttons" style="display:none; text-align:center;">
+        <button class="btn btn-primary" id="btn-next">下一题 →</button>
+      </div>
+    </div>
+
+    <!-- Session Result -->
+    <div class="card" id="session-result" style="display:none;"></div>
+  </div>
+</section>
+
+<!-- Mind Map Section -->
+<section class="section" id="section-mindmap" style="display:none;">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2 class="section-title">知识导图</h2>
+      <p class="section-subtitle">点击知识点开始针对性刷题</p>
+    </div>
+    <div class="card" id="panel-mindmap" style="position:relative;padding:20px;min-height:500px;">
+      <div class="tree-controls" style="display:flex;gap:8px;justify-content:center;margin-bottom:20px;">
+        <button class="tree-subj-btn active" data-slug="ds">数据结构</button>
+        <button class="tree-subj-btn" data-slug="co">计组</button>
+        <button class="tree-subj-btn" data-slug="os">操作系统</button>
+        <button class="tree-subj-btn" data-slug="cn">计网</button>
+      </div>
+      <canvas id="mindmap-canvas" style="display:block;width:100%;height:500px;"></canvas>
+      <div id="mindmap-tooltip" style="position:absolute;pointer-events:none;display:none;background:rgba(0,0,0,.9);backdrop-filter:blur(12px);color:#fff;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:600;white-space:nowrap;z-index:10;border:1px solid rgba(255,255,255,.1);"></div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Section -->
+<section class="section" id="section-stats" style="display:none;">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2 class="section-title">学习统计</h2>
+    </div>
+    <div class="card" id="panel-stats"></div>
+  </div>
+</section>
+
+<!-- Wrong Book Section -->
+<section class="section" id="section-wrongbook" style="display:none;">
+  <div class="section-inner">
+    <div class="section-header">
+      <h2 class="section-title">错题本</h2>
+    </div>
+    <div class="card" id="wrongbook-content"></div>
+  </div>
+</section>
+
+<!-- Chat -->
+<button class="chat-toggle" id="chat-toggle" style="display:none;">💬</button>
+<div class="chat-panel" id="chat-panel" style="display:none;">
+  <div class="chat-header">
+    <span>AI 答疑</span>
+    <button class="chat-close" id="chat-close">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-msg bot">👋 你好！我是408答疑助手。
+
+💬 试试问我：
+  "解析一下" — 完整题目解析
+  "为什么选X？" — 解释正确选项
+  "考点是什么？" — 知识点速查
+  "给个提示" — 不直接给答案的引导</div>
+  </div>
+  <div class="chat-quick-actions" id="chat-quick-actions">
+    <button class="chat-quick-btn" data-msg="解析一下">🔍 解析</button>
+    <button class="chat-quick-btn" data-msg="考点是什么？">🎯 考点</button>
+    <button class="chat-quick-btn" data-msg="给个提示">💡 提示</button>
+    <button class="chat-quick-btn" data-msg="分析每个选项">📋 选项分析</button>
+  </div>
+  <div class="chat-input-row">
+    <input type="text" id="chat-input" placeholder="输入你的问题...">
+    <button class="btn btn-primary btn-sm" id="chat-send">发送</button>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer">
+  <p>408 智能刷题助手 · 为计算机考研而生</p>
+</footer>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const state = {
+  sessionId: null,
+  questions: [],
+  currentIndex: 0,
+  selectedAnswer: null,
+  answered: false,
+  mode: 'new',
+  chatHistory: '',
+  currentQuestionId: null,
+  streak: 0,
+  questionStartTime: 0,
+  timerInterval: null,
+};
+
+// ============================================================
+// HELPERS
+// ============================================================
+const $ = (s) => document.querySelector(s);
+const $$ = (s) => document.querySelectorAll(s);
+
+function post(url, data) {
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCSRF() },
+    body: JSON.stringify(data),
+  }).then(r => r.json());
+}
+
+function getCSRF() {
+  const m = document.cookie.match(/csrftoken=([^;]+)/);
+  return m ? m[1] : '';
+}
+
+function scrollToSection(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+const diffLabels = { 1: '基础', 2: '中等', 3: '较难' };
+const diffCls = { 1: 'badge-easy', 2: 'badge-mid', 3: 'badge-hard' };
+
+// ============================================================
+// THEME
+// ============================================================
+(function initTheme() {
+  // Default dark — Apple style
+  const saved = localStorage.getItem('408-theme');
+  if (saved === 'light') document.documentElement.setAttribute('data-theme', 'light');
+  updateThemeIcon();
+})();
+
+$('#theme-toggle').addEventListener('click', () => {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  document.documentElement.setAttribute('data-theme', isLight ? '' : 'light');
+  localStorage.setItem('408-theme', isLight ? 'dark' : 'light');
+  updateThemeIcon();
+});
+
+function updateThemeIcon() {
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  $('#theme-toggle').textContent = isLight ? '🌙' : '☀️';
+}
+
+// ============================================================
+// SCROLL REVEAL
+// ============================================================
+(function initScrollReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.section-header, .subject-card, .hero-stat').forEach(el => {
+    el.classList.add('scroll-reveal');
+    observer.observe(el);
+  });
+
+  // Immediately reveal hero
+  setTimeout(() => {
+    document.querySelector('.hero-title')?.classList.add('visible');
+    document.querySelector('.hero-desc')?.classList.add('visible');
+  }, 100);
+})();
+
+// ============================================================
+// RIPPLE
+// ============================================================
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.btn');
+  if (!btn) return;
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+  ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+  btn.appendChild(ripple);
+  ripple.addEventListener('animationend', () => ripple.remove());
+});
+
+// ============================================================
+// CONFETTI
+// ============================================================
+const confettiCanvas = $('#confetti-canvas');
+const ctx = confettiCanvas.getContext('2d');
+let confettiParticles = [];
+let confettiAnimId = null;
+
+function resizeConfetti() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeConfetti);
+resizeConfetti();
+
+function spawnConfetti() {
+  const colors = ['#6366f1', '#818cf8', '#0d9488', '#d97757', '#eab308', '#30d158', '#ff9f0a', '#ff453a'];
+  for (let i = 0; i < 120; i++) {
+    confettiParticles.push({
+      x: window.innerWidth / 2 + (Math.random() - .5) * 200,
+      y: window.innerHeight / 2,
+      vx: (Math.random() - .5) * 12,
+      vy: -Math.random() * 14 - 4,
+      size: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      rotation: Math.random() * 360,
+      rotationSpeed: (Math.random() - .5) * 10,
+      life: 1,
+      decay: Math.random() * .008 + .006,
+      shape: Math.random() > .5 ? 'rect' : 'circle',
+    });
+  }
+  if (!confettiAnimId) animateConfetti();
+}
+
+function animateConfetti() {
+  ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  let alive = false;
+  confettiParticles = confettiParticles.filter(p => {
+    p.x += p.vx;
+    p.vy += .25;
+    p.y += p.vy;
+    p.rotation += p.rotationSpeed;
+    p.life -= p.decay;
+    if (p.life <= 0) return false;
+    alive = true;
+    ctx.save();
+    ctx.translate(p.x, p.y);
+    ctx.rotate(p.rotation * Math.PI / 180);
+    ctx.globalAlpha = p.life;
+    ctx.fillStyle = p.color;
+    if (p.shape === 'rect') {
+      ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+    } else {
+      ctx.beginPath();
+      ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+    return true;
+  });
+  if (alive) {
+    confettiAnimId = requestAnimationFrame(animateConfetti);
+  } else {
+    confettiAnimId = null;
+    confettiParticles = [];
+    ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+  }
+}
+
+// ============================================================
+// TIMER
+// ============================================================
+function startTimer() {
+  stopTimer();
+  state.questionStartTime = Date.now();
+  updateTimerDisplay();
+  state.timerInterval = setInterval(updateTimerDisplay, 1000);
+}
+
+function stopTimer() {
+  if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+}
+
+function updateTimerDisplay() {
+  const elapsed = Math.floor((Date.now() - state.questionStartTime) / 1000);
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  $('#timer-display').textContent = `${String(mins).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+  const badge = $('#timer-badge');
+  badge.classList.remove('warning', 'danger');
+  if (elapsed > 120) badge.classList.add('danger');
+  else if (elapsed > 60) badge.classList.add('warning');
+}
+
+// ============================================================
+// STREAK
+// ============================================================
+function updateStreak(isCorrect) {
+  if (isCorrect) {
+    state.streak++;
+  } else {
+    state.streak = 0;
+  }
+  const badge = $('#streak-badge');
+  if (state.streak >= 3) {
+    badge.style.display = 'flex';
+    $('#streak-count').textContent = state.streak;
+    badge.classList.add('fire');
+    setTimeout(() => badge.classList.remove('fire'), 500);
+  } else if (state.streak > 0) {
+    badge.style.display = 'flex';
+    $('#streak-count').textContent = state.streak;
+    badge.classList.remove('fire');
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ============================================================
+// PROGRESS RING
+// ============================================================
+function updateProgressRing(idx, total) {
+  const pct = total > 0 ? idx / total : 0;
+  const circumference = 138.2;
+  const offset = circumference * (1 - pct);
+  $('#progress-circle').style.strokeDashoffset = offset;
+  $('#progress-ring-text').textContent = Math.round(pct * 100) + '%';
+  $('#progress-text').textContent = `${idx} / ${total}`;
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+$$('.nav-link').forEach(tab => {
+  tab.addEventListener('click', () => {
+    $$('.nav-link').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const panel = tab.dataset.tab;
+
+    // Hide all sections
+    ['section-practice', 'section-mindmap', 'section-stats', 'section-wrongbook'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'none';
+    });
+
+    // Show target section
+    const sectionMap = {
+      practice: 'section-practice',
+      mindmap: 'section-mindmap',
+      stats: 'section-stats',
+      wrongbook: 'section-wrongbook',
+    };
+    const targetId = sectionMap[panel];
+    if (targetId) {
+      const el = document.getElementById(targetId);
+      if (el) {
+        el.style.display = '';
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+
+    if (panel === 'practice') {
+      // ensure setup card visible, question area hidden if no session
+    }
+    if (panel === 'mindmap') { initMindMap(); startMindMapAnim(); }
+    if (panel === 'stats') loadStats();
+    if (panel === 'wrongbook') loadWrongBook();
+  });
+});
+
+// ============================================================
+// QUICK START from subject card
+// ============================================================
+function quickStart(slug) {
+  // Switch to practice tab
+  $$('.nav-link').forEach(t => t.classList.remove('active'));
+  const practiceTab = document.querySelector('[data-tab="practice"]');
+  if (practiceTab) practiceTab.classList.add('active');
+  ['section-mindmap', 'section-stats', 'section-wrongbook'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.style.display = 'none';
+  });
+  const el = document.getElementById('section-practice');
+  if (el) { el.style.display = ''; el.scrollIntoView({ behavior: 'smooth' }); }
+
+  $('#sel-category').value = slug;
+  $('#btn-start').click();
+}
+
+// ============================================================
+// MODE SELECTION
+// ============================================================
+$$('.mode-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    $$('.mode-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    state.mode = btn.dataset.mode;
+  });
+});
+
+$('#sel-count').addEventListener('input', (e) => {
+  $('#count-label').textContent = e.target.value + ' 题';
+});
+
+// ============================================================
+// START PRACTICE
+// ============================================================
+$('#btn-start').addEventListener('click', async () => {
+  const category = $('#sel-category').value;
+  const difficulty = $('#sel-difficulty').value;
+  const count = parseInt($('#sel-count').value);
+
+  if (state.mode === 'wrong') {
+    const resp = await fetch('/api/wrongbook/').then(r => r.json());
+    if (!resp.wrong_book.length) {
+      alert('错题本为空！请先做几道题吧~');
+      return;
+    }
+    state.questions = resp.wrong_book;
+    state.sessionId = null;
+    state.currentIndex = 0; state.answered = false; state.streak = 0;
+    startQuestionUI();
+    return;
+  }
+
+  const resp = await post('/api/practice/start/', {
+    category: category || null,
+    difficulty: difficulty ? parseInt(difficulty) : null,
+    count,
+    mode: state.mode === 'adaptive' ? 'adaptive' : 'new',
+  });
+
+  state.sessionId = resp.session_id;
+  state.questions = resp.questions;
+  state.currentIndex = 0; state.answered = false; state.streak = 0;
+  startQuestionUI();
+});
+
+function startQuestionUI() {
+  $('#setup-card').style.display = 'none';
+  $('#question-area').style.display = '';
+  $('#session-result').style.display = 'none';
+  $('#result-card').style.display = 'none';
+  $('#nav-buttons').style.display = 'none';
+  $('#chat-toggle').style.display = 'flex';
+  $('#streak-badge').style.display = 'none';
+  state.chatHistory = '';
+  state.streak = 0;
+  showQuestion(0);
+}
+
+// ============================================================
+// SHOW QUESTION
+// ============================================================
+function showQuestion(idx) {
+  if (idx >= state.questions.length) {
+    showSessionResult();
+    return;
+  }
+  state.currentIndex = idx;
+  state.selectedAnswer = null;
+  state.answered = false;
+  stopTimer();
+
+  const q = state.questions[idx];
+  state.currentQuestionId = q.id;
+  state.chatHistory = '';
+  $('#chat-messages').innerHTML = '';
+
+  updateProgressRing(idx, state.questions.length);
+  startTimer();
+
+  const diff = q.difficulty || 1;
+  $('#question-card').innerHTML = `
+    <div class="question-header">
+      <span class="question-num">第 ${idx + 1} 题</span>
+      <div style="display:flex;gap:8px;">
+        <span class="badge ${diffCls[diff]}">${diffLabels[diff]}</span>
+        <span class="badge badge-tag">${q.knowledge_point || ''}</span>
+      </div>
+    </div>
+    <div class="question-content">${q.content}</div>
+    <div id="options-container">
+      ${renderOptions(q)}
+    </div>
+    <div class="submit-row">
+      <button class="btn btn-outline btn-sm" id="btn-skip" style="display:none;">跳过</button>
+      <button class="btn btn-primary" id="btn-submit" disabled>提交答案</button>
+    </div>
+  `;
+
+  $('#result-card').style.display = 'none';
+  $('#nav-buttons').style.display = 'none';
+
+  $$('.option').forEach(opt => {
+    opt.addEventListener('click', () => {
+      if (state.answered) return;
+      if (q.qtype === 'multi') {
+        opt.classList.toggle('selected');
+        updateMultiAnswer();
+      } else {
+        $$('.option').forEach(o => o.classList.remove('selected'));
+        opt.classList.add('selected');
+        state.selectedAnswer = opt.dataset.value;
+        $('#btn-submit').disabled = false;
+      }
+    });
+  });
+
+  $('#btn-submit').addEventListener('click', submitAnswer);
+  if (state.mode === 'wrong') $('#btn-submit').textContent = '查看答案';
+}
+
+function renderOptions(q) {
+  if (!q.options) return '';
+  return Object.entries(q.options)
+    .filter(([_, v]) => v)
+    .map(([k, v]) => `
+      <div class="option" data-value="${k}">
+        <span class="opt-letter">${k}</span>
+        <span>${v}</span>
+      </div>`)
+    .join('');
+}
+
+function updateMultiAnswer() {
+  const selected = [...$$('.option.selected')].map(o => o.dataset.value).sort().join('');
+  state.selectedAnswer = selected;
+  $('#btn-submit').disabled = selected.length === 0;
+}
+
+// ============================================================
+// SUBMIT ANSWER
+// ============================================================
+async function submitAnswer() {
+  if (!state.selectedAnswer) return;
+  state.answered = true;
+  stopTimer();
+  $$('.option').forEach(o => o.classList.add('disabled'));
+
+  const q = state.questions[state.currentIndex];
+
+  if (state.mode === 'wrong' || !state.sessionId) {
+    const isCorrect = state.selectedAnswer.toUpperCase() === (q.answer || '').toUpperCase();
+    showResult({ is_correct: isCorrect, correct_answer: q.answer, explanation: q.explanation, session_progress: null });
+    updateStreak(isCorrect);
+    if (isCorrect) spawnConfetti();
+    return;
+  }
+
+  const result = await post('/api/practice/submit/', {
+    session_id: state.sessionId,
+    question_id: q.id,
+    answer: state.selectedAnswer,
+  });
+  updateStreak(result.is_correct);
+  if (result.is_correct) spawnConfetti();
+  showResult(result);
+}
+
+function showResult(result) {
+  const isCorrect = result.is_correct;
+  const q = state.questions[state.currentIndex];
+
+  $$('.option').forEach(o => {
+    const v = o.dataset.value;
+    const correctAnswer = result.correct_answer || q.answer || '';
+    const correctLetters = correctAnswer.toUpperCase().split('').filter(c => c >= 'A' && c <= 'D');
+    if (correctLetters.includes(v)) o.classList.add('correct');
+    if (state.selectedAnswer && state.selectedAnswer.toUpperCase().includes(v) && !correctLetters.includes(v)) {
+      o.classList.add('wrong');
+    }
+  });
+
+  $('#btn-submit').style.display = 'none';
+  $('#btn-skip').style.display = 'none';
+
+  $('#result-card').style.display = '';
+  $('#result-card').innerHTML = `
+    <div class="result-box ${isCorrect ? 'correct' : 'wrong'}">
+      <strong>${isCorrect ? '✓ 回答正确' : '✗ 回答错误'}</strong>
+      <span style="margin-left:8px;font-size:13px;color:var(--text2);">
+        正确答案：${result.correct_answer || q.answer}
+      </span>
+    </div>
+    <div class="explanation">${result.explanation || q.explanation || '暂无解析'}</div>
+    <button class="btn btn-outline btn-sm" onclick="askAI()" style="margin-top:10px;">AI 答疑</button>
+  `;
+
+  $('#nav-buttons').style.display = '';
+  if (state.currentIndex < state.questions.length - 1) {
+    $('#btn-next').textContent = '下一题 →';
+    $('#btn-next').onclick = () => showQuestion(state.currentIndex + 1);
+  } else {
+    $('#btn-next').textContent = '查看结果';
+    $('#btn-next').onclick = showSessionResult;
+  }
+}
+
+// ============================================================
+// SESSION RESULT
+// ============================================================
+async function showSessionResult() {
+  stopTimer();
+  $('#question-area').style.display = 'none';
+  $('#setup-card').style.display = '';
+  $('#chat-toggle').style.display = 'none';
+  $('#chat-panel').style.display = 'none';
+  $('#streak-badge').style.display = 'none';
+
+  if (!state.sessionId) {
+    $('#session-result').style.display = '';
+    $('#session-result').innerHTML = `
+      <h3 style="margin-bottom:16px;font-size:18px;">📕 错题复习完成</h3>
+      <button class="btn btn-primary" onclick="location.reload()">返回</button>
+    `;
+    return;
+  }
+
+  const resp = await fetch(`/api/practice/result/${state.sessionId}/`).then(r => r.json());
+  $('#session-result').style.display = '';
+
+  const acc = resp.accuracy;
+  const accCls = acc >= 80 ? 'green' : acc >= 60 ? '' : 'red';
+  if (acc >= 80) spawnConfetti();
+
+  $('#session-result').innerHTML = `
+    <h3 style="margin-bottom:20px;font-size:20px;">📊 练习结果</h3>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="summary-value">${resp.total}</div>
+        <div class="summary-label">总题数</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value ${accCls}">${resp.correct}</div>
+        <div class="summary-label">正确</div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-value ${accCls}">${acc}%</div>
+        <div class="summary-label">正确率</div>
+      </div>
+    </div>
+    ${renderResultDetails(resp.records)}
+    <button class="btn btn-primary" onclick="location.reload()" style="margin-top:20px;">再来一轮</button>
+  `;
+}
+
+function renderResultDetails(records) {
+  return records.map((r, i) => `
+    <div style="padding:14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:start;gap:12px;">
+      <span style="font-size:14px;flex:1;">${i+1}. ${r.content}</span>
+      <span style="font-size:13px;font-weight:600;white-space:nowrap;
+        color:${r.is_correct?'var(--success)':'var(--danger)'};">
+        ${r.is_correct ? '✓' : '✗'} ${r.your_answer} / ${r.correct_answer}
+      </span>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// STATS
+// ============================================================
+async function loadStats() {
+  const resp = await fetch('/api/stats/').then(r => r.json());
+  let html = '<h3 style="margin-bottom:20px;font-size:20px;">📊 学习统计</h3>';
+
+  html += `<div class="summary-grid">
+    <div class="summary-item"><div class="summary-value">${resp.summary.total_questions}</div><div class="summary-label">题库总量</div></div>
+    <div class="summary-item"><div class="summary-value">${resp.summary.total_answered}</div><div class="summary-label">已答题目</div></div>
+    <div class="summary-item"><div class="summary-value">${resp.summary.total_wrong}</div><div class="summary-label">错题本剩余</div></div>
+  </div>`;
+
+  if (resp.category_stats && resp.category_stats.length) {
+    html += '<h4 style="margin-bottom:10px;">各科正确率</h4>';
+    html += '<table class="stats-table"><thead><tr><th>科目</th><th>已做</th><th>正确</th><th>正确率</th></tr></thead><tbody>';
+    resp.category_stats.forEach(s => {
+      const cls = s.accuracy === null ? '' : s.accuracy >= 70 ? 'high' : s.accuracy >= 50 ? 'mid' : 'low';
+      html += `<tr><td>${s.category}</td><td>${s.total}</td><td>${s.correct}</td><td class="accuracy-cell ${cls}">${s.accuracy !== null ? s.accuracy + '%' : '-'}</td></tr>`;
+    });
+    html += '</tbody></table>';
+  }
+
+  if (resp.weak_points && resp.weak_points.length) {
+    html += '<h4 style="margin:20px 0 10px;">薄弱知识点 TOP5</h4>';
+    html += '<table class="stats-table"><thead><tr><th>科目</th><th>知识点</th><th>错误次数</th></tr></thead><tbody>';
+    resp.weak_points.slice(0, 5).forEach(w => {
+      html += `<tr><td>${w.question__category__name}</td><td>${w.question__knowledge_point}</td><td>${w.error_count}</td></tr>`;
+    });
+    html += '</tbody></table>';
+  }
+
+  $('#panel-stats').innerHTML = html;
+}
+
+// ============================================================
+// WRONG BOOK
+// ============================================================
+async function loadWrongBook() {
+  const resp = await fetch('/api/wrongbook/').then(r => r.json());
+  if (!resp.wrong_book.length) {
+    $('#wrongbook-content').innerHTML = `
+      <div class="empty">
+        <div class="empty-icon">📗</div>
+        <p>错题本为空，继续保持！</p>
+      </div>`;
+    return;
+  }
+
+  let html = `<h3 style="margin-bottom:20px;font-size:20px;">📕 错题本 (${resp.total}题)</h3>`;
+  resp.wrong_book.forEach((q, i) => {
+    html += `
+      <div class="wrong-item">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:12px;color:var(--text2);">${q.category} · ${q.knowledge_point}</span>
+          <span style="font-size:11px;color:var(--danger);font-weight:600;">错误 ${q.wrong_count} 次</span>
+        </div>
+        <div class="question-content">${i+1}. ${q.content}</div>
+        <div class="wrong-answer">正确答案：${q.answer}</div>
+        <div class="explanation">${q.explanation || '暂无解析'}</div>
+        <button class="btn btn-success btn-sm" onclick="markMastered(${q.id})" style="margin-top:10px;">✓ 已掌握</button>
+      </div>`;
+  });
+  $('#wrongbook-content').innerHTML = html;
+}
+
+async function markMastered(qid) {
+  await post('/api/wrongbook/mastered/', { question_id: qid });
+  loadWrongBook();
+}
+
+// ============================================================
+// AI CHAT
+// ============================================================
+$('#chat-toggle').addEventListener('click', () => {
+  $('#chat-panel').style.display = 'flex';
+  $('#chat-toggle').style.display = 'none';
+});
+$('#chat-close').addEventListener('click', () => {
+  $('#chat-panel').style.display = 'none';
+  $('#chat-toggle').style.display = 'flex';
+});
+
+function askAI() {
+  $('#chat-panel').style.display = 'flex';
+  $('#chat-toggle').style.display = 'none';
+  $('#chat-input').focus();
+}
+
+document.querySelectorAll('.chat-quick-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const msg = btn.dataset.msg;
+    if (!state.currentQuestionId) {
+      addChatMsg('bot', '请先开始刷题，才能使用答疑功能哦~');
+      return;
+    }
+    $('#chat-input').value = msg;
+    sendChat();
+  });
+});
+
+$('#chat-send').addEventListener('click', sendChat);
+$('#chat-input').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendChat();
+});
+
+async function sendChat() {
+  const input = $('#chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  if (!state.currentQuestionId) {
+    addChatMsg('bot', '请先开始刷题，才能使用答疑功能哦~');
+    return;
+  }
+
+  addChatMsg('user', msg);
+  input.value = '';
+  state.chatHistory += `\n用户：${msg}`;
+
+  const typingDiv = addChatMsg('bot typing', '正在分析...');
+  typingDiv.classList.add('typing');
+
+  try {
+    const resp = await post('/api/chat/', {
+      question_id: state.currentQuestionId,
+      message: msg,
+      history: state.chatHistory,
+    });
+    typingDiv.remove();
+    const reply = resp.reply || '抱歉，暂时无法回答。';
+    addChatMsg('bot', reply);
+    state.chatHistory += `\nAI：${reply}`;
+  } catch (e) {
+    typingDiv.remove();
+    addChatMsg('bot', '网络错误，请稍后重试。');
+  }
+}
+
+function addChatMsg(role, text) {
+  const div = document.createElement('div');
+  div.className = `chat-msg ${role}`;
+  div.innerHTML = text.replace(/\n/g, '<br>');
+  const msgs = $('#chat-messages');
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+// ============================================================
+// KNOWLEDGE TREE DATA
+// ============================================================
+const knowledgeTree = {
+  ds: {
+    name: '数据结构', slug: 'ds',
+    chapters: [
+      { name: '线性表', topics: ['顺序表', '单链表', '循环链表', '双向链表'] },
+      { name: '栈和队列', topics: ['栈应用', '循环队列', '表达式求值'] },
+      { name: '串', topics: ['KMP算法', 'next数组'] },
+      { name: '树与二叉树', topics: ['二叉树性质', '二叉树遍历', '线索二叉树', '哈夫曼树', '并查集'] },
+      { name: '图', topics: ['图的存储', '图的遍历', '最小生成树', '最短路径', '拓扑排序', '关键路径'] },
+      { name: '查找', topics: ['折半查找', '分块查找', '二叉排序树', '平衡二叉树', 'B树', 'B+树', '散列表', '红黑树'] },
+      { name: '排序', topics: ['插入排序', '冒泡排序', '快速排序', '堆排序', '归并排序', '基数排序', '外部排序'] },
+    ]
+  },
+  co: {
+    name: '计算机组成原理', slug: 'co',
+    chapters: [
+      { name: '计算机系统概述', topics: ['冯诺依曼结构', 'CPI/MIPS'] },
+      { name: '数据的表示和运算', topics: ['进制转换', '原码/补码/反码', 'IEEE754浮点数', '奇偶/CRC/海明校验'] },
+      { name: '存储器层次结构', topics: ['Cache映射', 'Cache替换算法', 'Cache写策略', 'DRAM/SRAM', '虚拟存储器'] },
+      { name: '指令系统', topics: ['寻址方式', 'CISC与RISC', '指令格式'] },
+      { name: '中央处理器', topics: ['数据通路', '硬布线/微程序控制器', '指令流水线', '数据冒险/控制冒险'] },
+      { name: '总线', topics: ['总线分类', '总线仲裁', 'PCI/USB标准'] },
+      { name: '输入输出系统', topics: ['程序查询', '程序中断', 'DMA方式', '中断优先级'] },
+    ]
+  },
+  os: {
+    name: '操作系统', slug: 'os',
+    chapters: [
+      { name: '操作系统概述', topics: ['OS定义与特征', '批处理/分时/实时'] },
+      { name: '进程管理', topics: ['进程与线程', 'PV操作', '管程(Monitor)', '死锁预防', '银行家算法', '死锁检测'] },
+      { name: '内存管理', topics: ['连续分配', '分页管理', '分段管理', '段页式', '页面置换算法', 'Belady异常', '抖动(Thrashing)'] },
+      { name: '文件管理', topics: ['文件逻辑结构', '文件物理结构', '目录结构', '文件保护'] },
+      { name: 'I/O管理', topics: ['SPOOLing技术', '磁盘调度算法', '缓冲区'] },
+    ]
+  },
+  cn: {
+    name: '计算机网络', slug: 'cn',
+    chapters: [
+      { name: '计算机网络体系结构', topics: ['OSI七层模型', 'TCP/IP四层模型'] },
+      { name: '物理层', topics: ['电路交换', '报文交换', '分组交换'] },
+      { name: '数据链路层', topics: ['CRC校验', 'CSMA/CD', 'PPP协议', '以太网交换机'] },
+      { name: '网络层', topics: ['IPv4地址分类', 'CIDR子网划分', 'ARP协议', 'ICMP', 'RIP路由', 'OSPF', 'NAT'] },
+      { name: '传输层', topics: ['TCP三次握手', 'TCP四次挥手', 'TCP拥塞控制', 'UDP协议'] },
+      { name: '应用层', topics: ['HTTP/HTTPS', 'DNS', 'SMTP/POP3', 'FTP', 'MIME'] },
+    ]
+  }
+};
+
+let currentMindMapSlug = 'ds';
+let mindMapInitialized = false;
+
+// 2D Mind Map — Animated
+let mindMapNodes = [];
+let mindMapLines = [];      // { x1, y1, x2, y2, type: 'straight'|'curve', midX, midY }
+let mindMapAnimId = null;
+let mindMapTime = 0;
+const subjectColors = { ds: '#6366f1', co: '#d97757', os: '#0d9488', cn: '#eab308' };
+
+function initMindMap() {
+  if (mindMapInitialized) return;
+  mindMapInitialized = true;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      drawMindMap(currentMindMapSlug);
+      startMindMapAnim();
+    });
+  });
+}
+
+function drawMindMap(slug) {
+  const canvas = $('#mindmap-canvas');
+  const container = $('#panel-mindmap');
+  const dpr = Math.min(window.devicePixelRatio, 2);
+  const w = Math.max(container.clientWidth - 40, 600);
+  const h = 500;
+
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  canvas.style.width = w + 'px';
+  canvas.style.height = h + 'px';
+
+  const data = knowledgeTree[slug];
+  if (!data) return;
+  const color = subjectColors[slug] || '#6366f1';
+
+  mindMapNodes = [];
+  mindMapLines = [];
+
+  const cx = w / 2, cy = h / 2;
+  const chapters = data.chapters;
+  const chapterRadius = Math.min(160, w * 0.22);
+
+  mindMapNodes.push({ x: cx, y: cy, w: 140, h: 38, name: data.name, type: 'subject', data: slug, color, pulse: 0 });
+
+  const chNodes = [];
+  chapters.forEach((ch, ci) => {
+    const angle = (ci / chapters.length) * Math.PI * 2 - Math.PI / 2;
+    const nx = cx + Math.cos(angle) * chapterRadius;
+    const ny = cy + Math.sin(angle) * chapterRadius;
+    chNodes.push({ x: nx, y: ny, angle, chapter: ch, index: ci });
+    mindMapNodes.push({ x: nx, y: ny, w: 100, h: 28, name: ch.name, type: 'chapter', data: slug + ':' + ci, color, pulse: 0 });
+    mindMapLines.push({ x1: cx, y1: cy, x2: nx, y2: ny, type: 'straight' });
+  });
+
+  chNodes.forEach(({ x: chX, y: chY, angle: chAngle, chapter: ch, index: ci }) => {
+    const topics = ch.topics;
+    const topicRadius = 80;
+    const spreadAngle = 1.1;
+    topics.forEach((t, ti) => {
+      const frac = topics.length > 1 ? ti / (topics.length - 1) - 0.5 : 0;
+      const ta = chAngle + frac * spreadAngle;
+      const tx = chX + Math.cos(ta) * topicRadius;
+      const ty = chY + Math.sin(ta) * topicRadius;
+      const midX = (chX + tx) / 2, midY = (chY + ty) / 2 + 10;
+      mindMapNodes.push({ x: tx, y: ty, w: 76, h: 20, name: t, type: 'topic', data: slug + ':' + ci + ':' + ti + ':' + t, color: '#a5f3fc', pulse: 0 });
+      mindMapLines.push({ x1: chX, y1: chY, x2: tx, y2: ty, midX, midY, type: 'curve' });
+    });
+  });
+
+  mindMapTime = 0;
+}
+
+function startMindMapAnim() {
+  if (mindMapAnimId) return;
+  function loop(ts) {
+    mindMapAnimId = requestAnimationFrame(loop);
+    const panel = document.getElementById('section-mindmap');
+    if (!panel || panel.style.display === 'none') { mindMapAnimId = null; return; }
+    mindMapTime = ts * 0.001;
+    animateFrame();
+  }
+  mindMapAnimId = requestAnimationFrame(loop);
+}
+
+function animateFrame() {
+  const canvas = $('#mindmap-canvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio, 2);
+  const w = parseInt(canvas.style.width) || 700;
+  const h = parseInt(canvas.style.height) || 500;
+  ctx.save();
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+
+  const t = mindMapTime;
+  const subjectNode = mindMapNodes.find(n => n.type === 'subject');
+  const chapterNodes = mindMapNodes.filter(n => n.type === 'chapter');
+  const topicNodes = mindMapNodes.filter(n => n.type === 'topic');
+  const accent = subjectNode ? subjectNode.color : '#6366f1';
+
+  // === Draw lines with flowing glow ===
+  mindMapLines.forEach((line, i) => {
+    const phase = i * 0.3;
+    const glow = 0.10 + Math.sin(t * 1.5 + phase) * 0.06;
+
+    if (line.type === 'straight') {
+      // Flowing dash along straight line
+      ctx.beginPath();
+      ctx.moveTo(line.x1, line.y1);
+      ctx.lineTo(line.x2, line.y2);
+      ctx.strokeStyle = accent;
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = glow;
+      ctx.stroke();
+
+      // Traveling dot
+      const prog = (t * 0.4 + i * 0.15) % 1;
+      const dx = line.x1 + (line.x2 - line.x1) * prog;
+      const dy = line.y1 + (line.y2 - line.y1) * prog;
+      ctx.beginPath();
+      ctx.arc(dx, dy, 2.5, 0, Math.PI * 2);
+      ctx.fillStyle = '#fff';
+      ctx.globalAlpha = 0.8;
+      ctx.fill();
+    } else {
+      // Curved line
+      ctx.beginPath();
+      ctx.moveTo(line.x1, line.y1);
+      ctx.quadraticCurveTo(line.midX, line.midY, line.x2, line.y2);
+      ctx.strokeStyle = '#a5f3fc';
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = glow;
+      ctx.stroke();
+
+      // Traveling dot
+      const prog = (t * 0.5 + i * 0.12) % 1;
+      const mx = (1-prog)*(1-prog)*line.x1 + 2*(1-prog)*prog*line.midX + prog*prog*line.x2;
+      const my = (1-prog)*(1-prog)*line.y1 + 2*(1-prog)*prog*line.midY + prog*prog*line.y2;
+      ctx.beginPath();
+      ctx.arc(mx, my, 1.8, 0, Math.PI * 2);
+      ctx.fillStyle = '#cffafe';
+      ctx.globalAlpha = 0.7;
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  });
+
+  // === Draw nodes with pulse ===
+  topicNodes.forEach(n => drawNodeAnimated(ctx, n, t));
+  chapterNodes.forEach(n => drawNodeAnimated(ctx, n, t));
+  if (subjectNode) drawNodeAnimated(ctx, subjectNode, t);
+
+  ctx.restore();
+}
+
+function drawNodeAnimated(ctx, n, t) {
+  const { x, y, w, h, name, color, type } = n;
+  const isMain = type === 'subject';
+  const isChapter = type === 'chapter';
+  const r = isMain ? 10 : isChapter ? 7 : 5;
+  const fontSize = isMain ? 14 : isChapter ? 12 : 11;
+  const fontWeight = isMain ? '700' : isChapter ? '600' : '500';
+
+  // Pulse factor
+  const pulse = 1 + Math.sin(t * 2.5 + x * 0.1 + y * 0.1) * 0.04;
+
+  // Background
+  ctx.fillStyle = isChapter ? color : (type === 'topic' ? 'rgba(165,243,252,0.06)' : color);
+  const bgAlpha = (isMain ? 0.22 : isChapter ? 0.1 : 0.06) * pulse;
+  ctx.globalAlpha = bgAlpha;
+  roundRect(ctx, x - w/2 * pulse, y - h/2 * pulse, w * pulse, h * pulse, r);
+  ctx.fill();
+  ctx.globalAlpha = 1;
+
+  // Border
+  ctx.strokeStyle = type === 'topic' ? 'rgba(165,243,252,0.25)' : color;
+  ctx.globalAlpha = 0.25 * pulse;
+  ctx.lineWidth = 1;
+  roundRect(ctx, x - w/2 * pulse, y - h/2 * pulse, w * pulse, h * pulse, r);
+  ctx.stroke();
+  ctx.globalAlpha = 1;
+
+  // Glow aura on subject node
+  if (isMain) {
+    const glowR = 100 + Math.sin(t * 1.5) * 8;
+    const grad = ctx.createRadialGradient(x, y, 20, x, y, glowR);
+    grad.addColorStop(0, color + '30');
+    grad.addColorStop(1, 'transparent');
+    ctx.fillStyle = grad;
+    ctx.globalAlpha = 0.5;
+    ctx.beginPath(); ctx.arc(x, y, glowR, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
+
+  // Text
+  ctx.fillStyle = type === 'topic' ? '#cffafe' : '#fff';
+  ctx.font = fontWeight + ' ' + fontSize + 'px ' + getComputedStyle(document.body).fontFamily;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  let dn = name;
+  while (ctx.measureText(dn).width > w - 14 && dn.length > 3) dn = dn.slice(0, -2) + '\u2026';
+  ctx.fillText(dn, x, y);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// Mouse interaction
+$('#mindmap-canvas').addEventListener('mousemove', (e) => {
+  const rect = $('#mindmap-canvas').getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const hit = mindMapNodes.find(n => mx >= n.x - n.w/2 && mx <= n.x + n.w/2 && my >= n.y - n.h/2 && my <= n.y + n.h/2);
+  $('#mindmap-canvas').style.cursor = hit ? 'pointer' : 'default';
+  const tip = $('#mindmap-tooltip');
+  if (hit) { tip.textContent = hit.name; tip.style.display = 'block'; tip.style.left = (mx + 16) + 'px'; tip.style.top = (my - 40) + 'px'; }
+  else tip.style.display = 'none';
+});
+
+$('#mindmap-canvas').addEventListener('click', (e) => {
+  const rect = $('#mindmap-canvas').getBoundingClientRect();
+  const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+  const hit = mindMapNodes.find(n => mx >= n.x - n.w/2 && mx <= n.x + n.w/2 && my >= n.y - n.h/2 && my <= n.y + n.h/2);
+  if (!hit || hit.type !== 'topic') return;
+  const parts = hit.data.split(':');
+  if (parts.length < 4) return;
+  const subj = parts[0], tp = parts[3];
+  $$('.nav-link').forEach(t => t.classList.remove('active'));
+  const pt = document.querySelector('[data-tab="practice"]');
+  if (pt) pt.classList.add('active');
+  ['section-mindmap','section-stats','section-wrongbook'].forEach(id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; });
+  const el = document.getElementById('section-practice');
+  if (el) el.style.display = '';
+  $('#sel-category').value = subj;
+  post('/api/practice/start/', { category: subj, difficulty: null, count: 10, mode: 'new', knowledge_point: tp })
+    .then(resp => resp.questions.length ? resp : post('/api/practice/start/', { category: subj, difficulty: null, count: 10, mode: 'new' }))
+    .then(resp => { state.sessionId = resp.session_id; state.questions = resp.questions; state.currentIndex = 0; state.answered = false; state.mode = 'new'; state.streak = 0; startQuestionUI(); });
+});
+
+// Subject switcher
+document.querySelectorAll('.tree-subj-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tree-subj-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentMindMapSlug = btn.dataset.slug;
+    requestAnimationFrame(() => drawMindMap(currentMindMapSlug));
+  });
+});
+
+window.addEventListener('resize', () => {
+  if (document.getElementById('section-mindmap')?.style.display !== 'none') {
+    requestAnimationFrame(() => drawMindMap(currentMindMapSlug));
+  }
+});
+
+document.querySelector('[data-tab="mindmap"]')?.addEventListener('click', () => {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      drawMindMap(currentMindMapSlug);
+      if (!mindMapAnimId) startMindMapAnim();
+    });
+  });
+});</script>
+</body>
+</html>
